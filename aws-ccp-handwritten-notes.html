@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AWS CCP — Handwritten Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Patrick+Hand&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --yellow: #fff9c4;
+    --yellow2: #fffde7;
+    --pink: #fce4ec;
+    --pink2: #ffd6e0;
+    --blue: #e3f2fd;
+    --blue2: #bbdefb;
+    --green: #e8f5e9;
+    --green2: #c8e6c9;
+    --purple: #f3e5f5;
+    --purple2: #e1bee7;
+    --orange: #fff3e0;
+    --orange2: #ffe0b2;
+    --teal: #e0f7fa;
+    --teal2: #b2ebf2;
+    --red: #ffebee;
+    --red2: #ffcdd2;
+
+    --ink: #1a1a2e;
+    --ink2: #2c2c54;
+    --muted: #555;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f5f0e8;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(255,200,100,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(100,150,255,0.08) 0%, transparent 50%);
+    font-family: 'Kalam', cursive;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* PAPER TEXTURE */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 27px,
+      rgba(180,200,255,0.18) 27px,
+      rgba(180,200,255,0.18) 28px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #fff9c4 0%, #fffde7 40%, #fce4ec 100%);
+    border-bottom: 3px solid #e0c060;
+    padding: 32px 20px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  header::before {
+    content: '📒';
+    position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+    font-size: 48px; opacity: 0.3;
+  }
+  header::after {
+    content: '✏️';
+    position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+    font-size: 48px; opacity: 0.3;
+  }
+  .header-badge {
+    display: inline-block;
+    background: #ff9900;
+    color: #000;
+    font-family: 'Caveat', cursive;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 3px 14px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    transform: rotate(-1deg);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+  }
+  header h1 {
+    font-family: 'Caveat', cursive;
+    font-size: clamp(28px, 7vw, 52px);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 1px;
+    line-height: 1.1;
+  }
+  header h1 span { color: #e65100; }
+  header p {
+    font-family: 'Patrick Hand', cursive;
+    color: var(--muted);
+    font-size: 15px;
+    margin-top: 8px;
+  }
+  .doodles {
+    position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+    pointer-events: none; overflow: hidden;
+  }
+  .doodle {
+    position: absolute;
+    font-size: 22px;
+    opacity: 0.2;
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-8px) rotate(5deg);}
+  }
+
+  /* TABS */
+  .tabs-wrap {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(245,240,232,0.96);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px dashed #c9b99a;
+    padding: 8px 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .tabs { display: inline-flex; gap: 6px; }
+  .tab {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Caveat', cursive;
+    font-size: 15px;
+    font-weight: 600;
+    color: #555;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.08);
+    transform: rotate(-0.5deg);
+  }
+  .tab:hover { transform: rotate(0deg) translateY(-2px); background: #fffde7; }
+  .tab.active { background: #ff9900; color: #000; border-color: #e65100; transform: rotate(0.5deg); }
+
+  /* SEARCH */
+  .search-wrap {
+    max-width: 600px; margin: 20px auto 0; padding: 0 16px;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: white;
+    border: 2px solid #c9b99a;
+    border-bottom: 3px solid #c9b99a;
+    border-right: 3px solid #c9b99a;
+    border-radius: 8px;
+    font-family: 'Kalam', cursive;
+    font-size: 15px;
+    color: var(--ink);
+    padding: 10px 16px;
+    outline: none;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.08);
+  }
+  .search-wrap input:focus { border-color: #ff9900; }
+  .search-wrap input::placeholder { color: #aaa; }
+
+  /* MAIN */
+  main {
+    max-width: 1200px;
+    margin: 24px auto 0;
+    padding: 0 16px;
+    position: relative; z-index: 1;
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink2);
+    margin-bottom: 16px;
+    padding: 6px 16px;
+    background: rgba(255,255,255,0.5);
+    border-left: 5px solid #ff9900;
+    border-radius: 0 8px 8px 0;
+    display: inline-block;
+    transform: rotate(-0.3deg);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
+  }
+
+  /* GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+  }
+  .grid-3 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+  /* NOTE CARD */
+  .card {
+    border-radius: 6px 14px 14px 6px;
+    padding: 18px 20px;
+    position: relative;
+    box-shadow: 3px 4px 0 rgba(0,0,0,0.1), 0 1px 0 rgba(0,0,0,0.05);
+    border: 1.5px solid rgba(0,0,0,0.1);
+    animation: popIn 0.35s ease both;
+    overflow: visible;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    border-radius: 6px 0 0 6px;
+    background: rgba(0,0,0,0.12);
+  }
+
+  /* Sticky tape effect */
+  .card::after {
+    content: '';
+    position: absolute;
+    top: -6px; left: 50%; transform: translateX(-50%);
+    width: 50px; height: 14px;
+    background: rgba(255,255,180,0.7);
+    border: 1px solid rgba(200,180,0,0.3);
+    border-radius: 3px;
+    transform: translateX(-50%) rotate(-1deg);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    z-index: 2;
+  }
+
+  @keyframes popIn {
+    from { opacity:0; transform: scale(0.95) rotate(-1deg); }
+    to   { opacity:1; transform: scale(1) rotate(0deg); }
+  }
+
+  /* Card color variants */
+  .card:nth-child(6n+1) { background: var(--yellow); }
+  .card:nth-child(6n+2) { background: var(--blue); }
+  .card:nth-child(6n+3) { background: var(--green); }
+  .card:nth-child(6n+4) { background: var(--pink); }
+  .card:nth-child(6n+5) { background: var(--purple); }
+  .card:nth-child(6n+0) { background: var(--orange); }
+
+  /* Subtle rotation */
+  .card:nth-child(odd) { transform: rotate(-0.4deg); }
+  .card:nth-child(even) { transform: rotate(0.4deg); }
+  .card:hover { transform: rotate(0deg) translateY(-4px) scale(1.01); box-shadow: 5px 8px 0 rgba(0,0,0,0.12); z-index: 10; }
+  .card:hover::after { display:none; }
+
+  /* Card header */
+  .card-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.7);
+    border: 2px solid rgba(0,0,0,0.1);
+    box-shadow: 1px 2px 0 rgba(0,0,0,0.1);
+  }
+  .card-title {
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .card-sub {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 12px;
+    color: #777;
+    margin-top: 1px;
+  }
+  .card-desc {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 14px;
+    color: var(--ink2);
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  /* TAGS */
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .tag {
+    font-family: 'Caveat', cursive;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.6);
+    border: 1.5px solid rgba(0,0,0,0.12);
+    color: var(--ink2);
+  }
+  .tag.hot { background: #ff9900; color: #000; border-color: #e65100; }
+
+  /* EXAMPLE BOX */
+  .example {
+    background: rgba(255,255,255,0.55);
+    border-left: 3px solid rgba(0,0,0,0.25);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 13px;
+    color: var(--ink2);
+    line-height: 1.6;
+    position: relative;
+  }
+  .example::before {
+    content: '→';
+    position: absolute; left: -2px; top: 50%; transform: translateY(-50%);
+    color: var(--ink); font-size: 14px;
+  }
+  .example strong { color: #e65100; font-family: 'Caveat', cursive; font-size: 15px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-family: 'Patrick Hand', cursive; font-size: 13px; }
+  th {
+    background: rgba(255,255,255,0.5);
+    color: var(--ink);
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    padding: 7px 10px;
+    border: 2px solid rgba(0,0,0,0.1);
+    font-size: 14px;
+    text-align: left;
+  }
+  td {
+    padding: 6px 10px;
+    border: 1.5px solid rgba(0,0,0,0.08);
+    color: var(--ink2);
+    vertical-align: top;
+  }
+  tr:hover td { background: rgba(255,255,255,0.4); }
+
+  /* RESP GRID */
+  .resp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .resp-box {
+    background: rgba(255,255,255,0.5);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1.5px solid rgba(0,0,0,0.1);
+  }
+  .resp-box h4 {
+    font-family: 'Caveat', cursive;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 7px;
+  }
+  .resp-aws h4 { color: #e65100; }
+  .resp-cust h4 { color: #1565c0; }
+  .resp-box ul { list-style: none; }
+  .resp-box ul li {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 13px;
+    color: var(--ink2);
+    padding: 3px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+  }
+  .resp-box ul li:last-child { border: none; }
+  .resp-box ul li::before { content: '✓ '; color: #388e3c; }
+
+  /* PILLARS */
+  .pillars { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .pillar {
+    flex: 1; min-width: 100px;
+    background: rgba(255,255,255,0.6);
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.08);
+  }
+  .pillar .num { font-size: 30px; line-height: 1; }
+  .pillar .lbl { font-family: 'Patrick Hand', cursive; font-size: 12px; color: #666; margin-top: 5px; }
+
+  /* SUPPORT */
+  .support-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-top: 10px; }
+  .support-card {
+    background: rgba(255,255,255,0.6);
+    border-radius: 8px;
+    padding: 10px;
+    border-top: 4px solid;
+    border-left: 1.5px solid rgba(0,0,0,0.1);
+    border-right: 1.5px solid rgba(0,0,0,0.1);
+    border-bottom: 1.5px solid rgba(0,0,0,0.1);
+  }
+  .sup-basic   { border-top-color: #999; }
+  .sup-dev     { border-top-color: #43a047; }
+  .sup-biz     { border-top-color: #1976d2; }
+  .sup-ent     { border-top-color: #ff9900; }
+  .support-card h4 { font-family: 'Caveat', cursive; font-size: 16px; font-weight: 700; color: var(--ink); }
+  .support-card .price { font-family: 'Patrick Hand', cursive; font-size: 12px; color: #777; margin: 3px 0 6px; }
+  .support-card ul { list-style: none; }
+  .support-card ul li { font-family: 'Patrick Hand', cursive; font-size: 12px; color: var(--ink2); padding: 2px 0; }
+
+  /* BADGE */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: 'Caveat', cursive;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    transform: rotate(-1deg);
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+  }
+  .badge-exam { background: #e8f5e9; color: #2e7d32; border: 1.5px solid #a5d6a7; }
+  .badge-tip  { background: #ffebee; color: #c62828; border: 1.5px solid #ef9a9a; }
+
+  /* WIDE CARD */
+  .card-wide { grid-column: 1 / -1; }
+
+  /* NO RESULTS */
+  .no-results {
+    text-align: center; padding: 60px 20px;
+    font-family: 'Caveat', cursive; font-size: 22px; color: #aaa;
+  }
+
+  /* SPACING */
+  .mb { margin-bottom: 24px; }
+  .mt { margin-top: 24px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #f5f0e8; }
+  ::-webkit-scrollbar-thumb { background: #c9b99a; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="doodles">
+    <span class="doodle" style="left:5%;top:10%;animation-delay:0s">☁️</span>
+    <span class="doodle" style="left:12%;top:60%;animation-delay:0.5s">⭐</span>
+    <span class="doodle" style="left:88%;top:20%;animation-delay:1s">📌</span>
+    <span class="doodle" style="left:92%;top:70%;animation-delay:1.5s">🖊️</span>
+    <span class="doodle" style="left:50%;top:5%;animation-delay:2s">✨</span>
+  </div>
+  <div class="header-badge">AWS CLF-C02</div>
+  <h1>AWS Cloud Practitioner<br><span>Cheatsheet ☁</span></h1>
+  <p>✏️ Handwritten Notes Edition — Complete CCP Reference 2025</p>
+</header>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" data-tab="core">☁ Core</button>
+    <button class="tab" data-tab="compute">⚙ Compute</button>
+    <button class="tab" data-tab="storage">💾 Storage & DB</button>
+    <button class="tab" data-tab="network">🌐 Networking</button>
+    <button class="tab" data-tab="security">🔐 Security</button>
+    <button class="tab" data-tab="billing">💰 Billing</button>
+    <button class="tab" data-tab="migration">🚀 Migration</button>
+    <button class="tab" data-tab="wellarch">🏛 Well-Arch</button>
+  </div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-wrap">
+  <input type="text" id="searchBox" placeholder="🔍 Search notes... (EC2, S3, Lambda...)" />
+</div>
+
+<main>
+
+<!-- ─── CORE ─── -->
+<div class="section active" id="tab-core">
+  <p class="section-title">☁ Cloud Models</p>
+  <div class="grid mb">
+    <div class="card">
+      <div class="card-header">
+        <div class="icon">🏢</div>
+        <div><div class="card-title">On-Premises</div><div class="card-sub">Traditional model</div></div>
+      </div>
+      <div class="card-desc">You own & manage hardware, datacenter, power, cooling, staff.</div>
+      <div class="example"><strong>Cost:</strong> CapEx heavy — upfront hardware purchase</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="icon">🔀</div>
+        <div><div class="card-title">Hybrid Cloud</div><div class="card-sub">Mixed model</div></div>
+      </div>
+      <div class="card-desc">Combine on-prem + AWS cloud. Good for gradual migration or compliance needs.</div>
+      <div class="example"><strong>Example:</strong> Use S3 for backup but keep DB on-prem</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="icon">☁️</div>
+        <div><div class="card-title">Full Cloud</div><div class="card-sub">AWS-only model</div></div>
+      </div>
+      <div class="card-desc">Everything runs on AWS. OpEx model — pay-as-you-go, no hardware.</div>
+      <div class="example"><strong>Benefit:</strong> No CapEx, scale instantly, global reach</div>
+    </div>
+  </div>
+
+  <p class="section-title">🧱 Service Models — IaaS vs PaaS vs SaaS</p>
+  <div class="grid mb">
+    <div class="card card-wide">
+      <div class="table-wrap">
+        <table>
+          <tr><th>Model</th><th>You Manage</th><th>AWS Manages</th><th>Example</th></tr>
+          <tr><td><strong>IaaS</strong></td><td>OS, runtime, app, data</td><td>Hardware, networking</td><td>EC2 (bare VM)</td></tr>
+          <tr><td><strong>PaaS</strong></td><td>App code + data</td><td>OS, runtime, infra</td><td>Elastic Beanstalk</td></tr>
+          <tr><td><strong>SaaS</strong></td><td>Just use the app</td><td>Everything</td><td>Amazon WorkMail</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-title">🌟 6 Benefits of Cloud Computing</p>
+  <div class="grid grid-3 mb">
+    <div class="card"><div class="card-header"><div class="icon">💸</div><div><div class="card-title">Trade CapEx → OpEx</div></div></div><div class="card-desc">Pay only for what you use. No upfront data center investment.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">📦</div><div><div class="card-title">Massive Economies of Scale</div></div></div><div class="card-desc">AWS aggregates usage from millions → lower pay-per-use prices.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">↕️</div><div><div class="card-title">Stop Guessing Capacity</div></div></div><div class="card-desc">Scale up or down in minutes. No over/under provisioning.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">⚡</div><div><div class="card-title">Increase Speed & Agility</div></div></div><div class="card-desc">Deploy in minutes. Experiment faster with lower cost of failure.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">🏢</div><div><div class="card-title">No Data Center Ops</div></div></div><div class="card-desc">Stop spending on racking, stacking, powering servers.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">🌐</div><div><div class="card-title">Go Global in Minutes</div></div></div><div class="card-desc">Deploy in multiple AWS Regions around the world with a few clicks.</div></div>
+  </div>
+
+  <p class="section-title">🗺 AWS Global Infrastructure</p>
+  <div class="grid mb">
+    <div class="card">
+      <div class="card-header"><div class="icon">🗺️</div><div><div class="card-title">Regions</div></div></div>
+      <div class="card-desc">Physical location in the world with 2+ AZs. ~34 regions globally.</div>
+      <div class="example"><strong>Example:</strong> ap-south-1 = Mumbai region<br><strong>Exam tip:</strong> Not all services in all regions!</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="icon">🏭</div><div><div class="card-title">Availability Zones (AZ)</div></div></div>
+      <div class="card-desc">One or more discrete data centers with redundant power, networking. Each Region ≥2 AZs (usually 3).</div>
+      <div class="example"><strong>Example:</strong> ap-south-1a, ap-south-1b, ap-south-1c</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="icon">📡</div><div><div class="card-title">Edge Locations / PoPs</div></div></div>
+      <div class="card-desc">Used by CloudFront CDN to cache content closer to users. 400+ edge locations globally. More than Regions!</div>
+      <div class="example"><strong>Purpose:</strong> Reduce latency for end-users worldwide</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="icon">🏘️</div><div><div class="card-title">Local Zones</div></div></div>
+      <div class="card-desc">Extension of AWS Region in major metro areas. Single-digit ms response for latency-sensitive apps.</div>
+      <div class="example"><strong>Example:</strong> Live video editing apps near end users</div>
+    </div>
+  </div>
+
+  <p class="section-title">🔀 Shared Responsibility Model</p>
+  <div class="grid">
+    <div class="card card-wide">
+      <div class="badge badge-exam">⚠️ HIGH EXAM WEIGHT</div>
+      <div class="card-desc">Security and compliance is a SHARED responsibility between AWS and the customer.</div>
+      <div class="resp-grid">
+        <div class="resp-box resp-aws">
+          <h4>☁ AWS Responsible (Security OF the Cloud)</h4>
+          <ul>
+            <li>Physical datacenter security</li>
+            <li>Hardware & global network</li>
+            <li>Hypervisor & host OS</li>
+            <li>Managed service software (RDS, Lambda runtime)</li>
+            <li>AZ/Region infrastructure</li>
+          </ul>
+        </div>
+        <div class="resp-box resp-cust">
+          <h4>👤 Customer Responsible (Security IN the Cloud)</h4>
+          <ul>
+            <li>Guest OS patching (EC2)</li>
+            <li>Application code</li>
+            <li>IAM users, roles, policies</li>
+            <li>Data encryption (at rest & in transit)</li>
+            <li>Security Groups & NACLs config</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── COMPUTE ─── -->
+<div class="section" id="tab-compute">
+  <p class="section-title">⚙ Compute Services</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header"><div class="icon">🖥️</div><div><div class="card-title">EC2</div><div class="card-sub">Elastic Compute Cloud</div></div></div>
+      <div class="card-desc">Virtual machines in the cloud. Full control over OS, storage, networking. Resizable compute capacity.</div>
+      <div class="tags"><span class="tag hot">IaaS</span><span class="tag">Linux / Windows</span><span class="tag">On-Demand | Spot | Reserved</span></div>
+      <div class="example"><strong>Exam:</strong> Host a .NET web app → EC2<br><strong>Cheapest flexible:</strong> Spot Instances (~90% off!)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">⚡</div><div><div class="card-title">Lambda</div><div class="card-sub">Serverless Functions</div></div></div>
+      <div class="card-desc">Run code without provisioning servers. Pay per invocation. Auto-scales. Max 15 min timeout.</div>
+      <div class="tags"><span class="tag hot">Serverless</span><span class="tag">Event-Driven</span><span class="tag">FaaS</span></div>
+      <div class="example"><strong>Example:</strong> S3 upload → Lambda → resize image → save<br><strong>Tip:</strong> No server management = Lambda!</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🫘</div><div><div class="card-title">Elastic Beanstalk</div><div class="card-sub">PaaS deployment</div></div></div>
+      <div class="card-desc">Upload code → AWS handles deployment, load balancing, scaling, monitoring. Supports Node, Java, .NET, Python.</div>
+      <div class="tags"><span class="tag hot">PaaS</span><span class="tag">Auto-scaling</span></div>
+      <div class="example"><strong>Exam:</strong> Deploy code without managing infra → Elastic Beanstalk</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🐳</div><div><div class="card-title">ECS / EKS / Fargate</div><div class="card-sub">Container Services</div></div></div>
+      <div class="card-desc"><strong>ECS</strong> = AWS-managed Docker. <strong>EKS</strong> = Managed Kubernetes. <strong>Fargate</strong> = Serverless containers (no EC2!).</div>
+      <div class="tags"><span class="tag">Docker</span><span class="tag">Kubernetes</span><span class="tag hot">Fargate = Serverless</span></div>
+      <div class="example"><strong>Exam:</strong> Containers without managing servers → Fargate</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">📈</div><div><div class="card-title">Auto Scaling</div><div class="card-sub">EC2 Auto Scaling Group</div></div></div>
+      <div class="card-desc">Automatically add/remove EC2 instances based on demand. Maintains performance. Minimizes cost. Works with ELB.</div>
+      <div class="example"><strong>Example:</strong> E-commerce — scale out during Diwali sale, scale in post-sale! 🪔</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">⚖️</div><div><div class="card-title">Elastic Load Balancer</div><div class="card-sub">ELB</div></div></div>
+      <div class="card-desc">Distributes traffic across multiple EC2 instances.<br>
+        <strong>ALB</strong> = HTTP/S, Layer 7<br>
+        <strong>NLB</strong> = TCP, Layer 4<br>
+        <strong>CLB</strong> = Legacy
+      </div>
+      <div class="example"><strong>Exam:</strong> Route by URL path → ALB</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">💰</div><div><div class="card-title">EC2 Pricing Models</div></div></div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Type</th><th>Best For</th><th>Discount</th></tr>
+          <tr><td>On-Demand</td><td>Short, unpredictable</td><td>0%</td></tr>
+          <tr><td>Reserved (1-3yr)</td><td>Steady workloads</td><td>~72%</td></tr>
+          <tr><td>Spot</td><td>Flexible/fault-tolerant</td><td>~90%</td></tr>
+          <tr><td>Savings Plans</td><td>Flexible commitment</td><td>~66%</td></tr>
+          <tr><td>Dedicated Host</td><td>License compliance</td><td>varies</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🌐</div><div><div class="card-title">Lightsail</div><div class="card-sub">Simple VPS</div></div></div>
+      <div class="card-desc">Easy-to-use virtual private servers. Predictable pricing. Good for simple websites, blogs, small apps.</div>
+      <div class="example"><strong>Exam:</strong> Simple site, low budget, beginner → Lightsail</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── STORAGE & DB ─── -->
+<div class="section" id="tab-storage">
+  <p class="section-title">💾 Storage Services</p>
+  <div class="grid mb">
+    <div class="card">
+      <div class="card-header"><div class="icon">🪣</div><div><div class="card-title">S3</div><div class="card-sub">Simple Storage Service</div></div></div>
+      <div class="card-desc">Object storage. Unlimited storage. 99.999999999% (11 9s) durability. Files stored as objects in buckets.</div>
+      <div class="tags"><span class="tag hot">Objects</span><span class="tag">Unlimited</span><span class="tag">Max 5TB/obj</span></div>
+      <div class="example">
+        <strong>S3 Classes:</strong><br>
+        Standard → frequent access<br>
+        Standard-IA → infrequent access<br>
+        Glacier → archival, mins-hours retrieval<br>
+        Deep Archive → cheapest, 12hr retrieval
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">💿</div><div><div class="card-title">EBS</div><div class="card-sub">Elastic Block Store</div></div></div>
+      <div class="card-desc">Block storage for EC2. Like a hard drive attached to a VM. Persists independently from EC2 lifecycle. AZ-bound.</div>
+      <div class="tags"><span class="tag">Block Storage</span><span class="tag">EC2 only</span><span class="tag hot">AZ-scoped</span></div>
+      <div class="example"><strong>Exam:</strong> EC2 needs persistent storage → EBS<br>EBS snapshot = point-in-time backup in S3</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">📁</div><div><div class="card-title">EFS</div><div class="card-sub">Elastic File System</div></div></div>
+      <div class="card-desc">Managed NFS file system. Shared across multiple EC2 instances and AZs simultaneously. Auto-scales.</div>
+      <div class="tags"><span class="tag hot">Shared / Multi-AZ</span><span class="tag">Linux only</span></div>
+      <div class="example"><strong>Exam:</strong> Multiple EC2s same file system → EFS (not EBS!)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">❄️</div><div><div class="card-title">S3 Glacier</div><div class="card-sub">Archive Storage</div></div></div>
+      <div class="card-desc">Low-cost archival. Data retrieval takes minutes to hours. Long-term backup/compliance data.</div>
+      <div class="example">
+        <strong>Instant:</strong> milliseconds (expensive)<br>
+        <strong>Flexible:</strong> 1 min–12 hrs<br>
+        <strong>Deep Archive:</strong> 12–48 hrs (cheapest!)
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🌉</div><div><div class="card-title">Storage Gateway</div></div></div>
+      <div class="card-desc">Hybrid storage connecting on-premises to AWS cloud storage. Bridge for migration or burst scenarios.</div>
+      <div class="example"><strong>Exam:</strong> On-prem apps need cloud storage → Storage Gateway</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🚚</div><div><div class="card-title">AWS Snow Family</div></div></div>
+      <div class="card-desc">Physical devices to migrate large data to/from AWS when network is impractical.</div>
+      <div class="example">
+        <strong>Snowcone:</strong> 8 TB, portable, rugged<br>
+        <strong>Snowball Edge:</strong> 80 TB, compute+storage<br>
+        <strong>Snowmobile:</strong> 100 PB, literal truck! 🚛
+      </div>
+    </div>
+  </div>
+
+  <p class="section-title">🗄 Database Services</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header"><div class="icon">🗄️</div><div><div class="card-title">RDS</div><div class="card-sub">Relational Database Service</div></div></div>
+      <div class="card-desc">Managed relational DB. Supports MySQL, PostgreSQL, MariaDB, Oracle, SQL Server, Aurora.</div>
+      <div class="tags"><span class="tag hot">Managed</span><span class="tag">SQL</span><span class="tag">Multi-AZ available</span></div>
+      <div class="example"><strong>Exam:</strong> Managed SQL → RDS. High availability? → enable Multi-AZ</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">✨</div><div><div class="card-title">Aurora</div><div class="card-sub">AWS-native relational DB</div></div></div>
+      <div class="card-desc">AWS proprietary. MySQL/PostgreSQL-compatible. 5x faster than MySQL, 3x than PostgreSQL. 6 copies across 3 AZs.</div>
+      <div class="tags"><span class="tag hot">High Performance</span><span class="tag">Auto-replicates</span></div>
+      <div class="example"><strong>Exam:</strong> Highest performance AWS SQL → Aurora</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">⚡</div><div><div class="card-title">DynamoDB</div><div class="card-sub">NoSQL Key-Value</div></div></div>
+      <div class="card-desc">Fully managed NoSQL. Single-digit millisecond performance at ANY scale. Serverless.</div>
+      <div class="tags"><span class="tag hot">Serverless</span><span class="tag">NoSQL</span><span class="tag">Key-Value</span></div>
+      <div class="example"><strong>Exam:</strong> Serverless NoSQL, low latency, no fixed schema → DynamoDB</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🧠</div><div><div class="card-title">ElastiCache</div><div class="card-sub">In-Memory Cache</div></div></div>
+      <div class="card-desc">Managed Redis or Memcached. Ultra-low latency caching layer in front of databases. Reduces DB load.</div>
+      <div class="example"><strong>Exam:</strong> Speed up DB queries / reduce latency → ElastiCache</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">📊</div><div><div class="card-title">Redshift</div><div class="card-sub">Data Warehouse</div></div></div>
+      <div class="card-desc">Petabyte-scale data warehouse for analytics. OLAP workloads. Columnar storage. Integrates with QuickSight.</div>
+      <div class="example"><strong>Exam:</strong> Analytics on large datasets → Redshift (NOT RDS!)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🔀</div><div><div class="card-title">DMS</div><div class="card-sub">Database Migration Service</div></div></div>
+      <div class="card-desc">Migrate DBs to AWS. Supports homogeneous (Oracle→Oracle) and heterogeneous (Oracle→Aurora). Source stays live.</div>
+      <div class="example"><strong>Exam:</strong> Migrate on-prem DB to RDS with minimal downtime → DMS</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── NETWORKING ─── -->
+<div class="section" id="tab-network">
+  <p class="section-title">🌐 Networking & Content Delivery</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header"><div class="icon">🏗️</div><div><div class="card-title">VPC</div><div class="card-sub">Virtual Private Cloud</div></div></div>
+      <div class="card-desc">Your private network in AWS. Logically isolated section. Control IP ranges, subnets, route tables, internet gateways.</div>
+      <div class="tags"><span class="tag hot">Region-scoped</span><span class="tag">Subnets per AZ</span></div>
+      <div class="example">
+        <strong>Public Subnet:</strong> Has internet access (via IGW)<br>
+        <strong>Private Subnet:</strong> No direct internet access<br>
+        <strong>Exam:</strong> Launch EC2 with no internet → Private Subnet
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🛡️</div><div><div class="card-title">Security Groups & NACLs</div></div></div>
+      <div class="card-desc">
+        <strong>Security Group</strong> = Stateful firewall at EC2 instance level. Deny by default.<br>
+        <strong>NACL</strong> = Stateless firewall at Subnet level. Processes rules in order.
+      </div>
+      <div class="example"><strong>Exam:</strong> Block specific IP at subnet level → NACL (not SG)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🌍</div><div><div class="card-title">CloudFront</div><div class="card-sub">CDN</div></div></div>
+      <div class="card-desc">Content Delivery Network. Caches content at 400+ Edge Locations globally. Reduces latency. Integrates with S3, EC2, ALB.</div>
+      <div class="tags"><span class="tag hot">Global CDN</span><span class="tag">DDoS protection</span></div>
+      <div class="example"><strong>Exam:</strong> Fast static content delivery globally → CloudFront</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🧭</div><div><div class="card-title">Route 53</div><div class="card-sub">DNS Service</div></div></div>
+      <div class="card-desc">Highly available DNS service. Domain registration, DNS routing, health checks. Routing policies: Simple, Weighted, Failover, Latency.</div>
+      <div class="example"><strong>Exam:</strong> Map domain to EC2/ALB → Route 53<br>Failover to backup region → Route 53 health checks</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🔌</div><div><div class="card-title">Direct Connect</div></div></div>
+      <div class="card-desc">Dedicated private network connection from your data center to AWS. More reliable & faster than internet. Good for hybrid.</div>
+      <div class="example"><strong>Exam:</strong> Dedicated, private, consistent bandwidth to AWS → Direct Connect (not VPN)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🔒</div><div><div class="card-title">VPN</div><div class="card-sub">Site-to-Site VPN</div></div></div>
+      <div class="card-desc">Encrypted connection over public internet from on-prem to AWS VPC. Uses Virtual Private Gateway. Cheaper than Direct Connect.</div>
+      <div class="example"><strong>Exam:</strong> Quick encrypted tunnel to AWS → VPN<br>Low cost, over internet</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🔗</div><div><div class="card-title">VPC Peering</div></div></div>
+      <div class="card-desc">Connect two VPCs privately. Traffic via AWS backbone (not internet). Can be cross-account or cross-region.</div>
+      <div class="example"><strong>Note:</strong> Not transitive! A↔B and B↔C does NOT mean A↔C</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🌐</div><div><div class="card-title">Transit Gateway</div></div></div>
+      <div class="card-desc">Hub-and-spoke network model. Connect 1000s of VPCs and on-premises. Solves peering complexity at scale.</div>
+      <div class="example"><strong>Exam:</strong> Many VPCs need to connect each other → Transit Gateway (not peering)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SECURITY ─── -->
+<div class="section" id="tab-security">
+  <p class="section-title">🔐 Security & IAM</p>
+  <div class="grid">
+    <div class="card">
+      <div class="card-header"><div class="icon">👤</div><div><div class="card-title">IAM</div><div class="card-sub">Identity & Access Management</div></div></div>
+      <div class="card-desc">Manage who can access what in AWS. Global service. Users, Groups, Roles, Policies. Least privilege principle.</div>
+      <div class="tags"><span class="tag hot">Global</span><span class="tag">Least Privilege</span></div>
+      <div class="example">
+        <strong>Users:</strong> Individual people<br>
+        <strong>Groups:</strong> Collection of users with shared permissions<br>
+        <strong>Roles:</strong> For services (EC2, Lambda) or cross-account<br>
+        <strong>Policies:</strong> JSON docs defining permissions
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🕵️</div><div><div class="card-title">GuardDuty</div><div class="card-sub">Threat Detection</div></div></div>
+      <div class="card-desc">Intelligent threat detection using ML. Analyzes CloudTrail, VPC Flow Logs, DNS logs. No agents needed.</div>
+      <div class="example"><strong>Exam:</strong> Detect unusual API calls or crypto mining → GuardDuty</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🔍</div><div><div class="card-title">Inspector</div><div class="card-sub">Vulnerability Assessment</div></div></div>
+      <div class="card-desc">Automated security assessments for EC2 and container images. Checks for CVEs, network exposure, software vulns.</div>
+      <div class="example"><strong>Exam:</strong> Find EC2 security vulnerabilities → Inspector</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🛡️</div><div><div class="card-title">Shield</div><div class="card-sub">DDoS Protection</div></div></div>
+      <div class="card-desc">
+        <strong>Shield Standard:</strong> Free, automatic, protects all AWS customers<br>
+        <strong>Shield Advanced:</strong> Paid, 24/7 DDoS response team, financial protection
+      </div>
+      <div class="example"><strong>Exam:</strong> DDoS protection → Shield. Advanced = 24/7 support</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🌐</div><div><div class="card-title">WAF</div><div class="card-sub">Web Application Firewall</div></div></div>
+      <div class="card-desc">Protects web apps from common attacks (SQL injection, XSS). Works with CloudFront, ALB, API Gateway. Define rules/ACLs.</div>
+      <div class="example"><strong>Exam:</strong> Block SQL injection / XSS attacks → WAF</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🗝️</div><div><div class="card-title">KMS & Secrets Manager</div></div></div>
+      <div class="card-desc">
+        <strong>KMS:</strong> Create & manage encryption keys for S3, RDS, EBS<br>
+        <strong>Secrets Manager:</strong> Store, rotate, retrieve DB credentials & API keys. Auto-rotation!
+      </div>
+      <div class="example"><strong>Exam:</strong> Auto-rotate DB password → Secrets Manager</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">📋</div><div><div class="card-title">CloudTrail</div><div class="card-sub">Audit Logging</div></div></div>
+      <div class="card-desc">Records ALL API calls in your AWS account. Who did what, when, from where. Stored in S3. 90-day default history.</div>
+      <div class="example"><strong>Exam:</strong> Who deleted an S3 bucket? → CloudTrail<br>Compliance auditing → CloudTrail</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">⚙️</div><div><div class="card-title">Config</div><div class="card-sub">Configuration Compliance</div></div></div>
+      <div class="card-desc">Tracks config changes to AWS resources. Evaluate against compliance rules. Timeline view of changes.</div>
+      <div class="example">
+        <strong>vs CloudTrail:</strong><br>
+        CloudTrail = API activity (who did what?)<br>
+        Config = Resource state changes (what changed?)
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🏢</div><div><div class="card-title">Organizations & SCPs</div></div></div>
+      <div class="card-desc">Manage multiple AWS accounts centrally. Consolidated billing. SCPs = guardrails on member accounts.</div>
+      <div class="example"><strong>Exam:</strong> Prevent accounts from using certain regions → SCP in Organizations</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── BILLING ─── -->
+<div class="section" id="tab-billing">
+  <p class="section-title">💰 Billing, Pricing & Cost Management</p>
+
+  <div class="grid mb">
+    <div class="card card-wide">
+      <div class="badge badge-exam">⚠️ HIGH EXAM WEIGHT</div>
+      <div class="card-desc" style="margin-bottom:12px">AWS Pricing — 3 key cost drivers:</div>
+      <div class="pillars">
+        <div class="pillar"><div class="num">💻</div><div class="lbl">Compute<br>(per hour/sec)</div></div>
+        <div class="pillar"><div class="num">💾</div><div class="lbl">Storage<br>(per GB/month)</div></div>
+        <div class="pillar"><div class="num">🌐</div><div class="lbl">Data Transfer<br>(outbound only)</div></div>
+      </div>
+      <div class="example" style="margin-top:12px"><strong>Free:</strong> Data transfer INTO AWS is always free! Transfer within same region usually free.</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-header"><div class="icon">🧮</div><div><div class="card-title">Pricing Calculator</div></div></div>
+      <div class="card-desc">Estimate costs BEFORE you deploy. Build a scenario and get a cost breakdown. No AWS account needed.</div>
+      <div class="example"><strong>URL:</strong> calculator.aws<br><strong>Exam:</strong> Estimate monthly bill before deploying → Pricing Calculator</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">📊</div><div><div class="card-title">Cost Explorer</div></div></div>
+      <div class="card-desc">Visualize, understand, and manage AWS costs over time. 12 months historical data. Forecast up to 12 months. Free!</div>
+      <div class="example"><strong>Exam:</strong> Analyze past spend by service/account → Cost Explorer</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🔔</div><div><div class="card-title">AWS Budgets</div></div></div>
+      <div class="card-desc">Set custom cost/usage budgets. Get alerts when actual or forecasted costs exceed threshold. Up to 5 alerts/budget.</div>
+      <div class="example"><strong>Exam:</strong> Email alert when spend exceeds $100 → AWS Budgets</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">💡</div><div><div class="card-title">Trusted Advisor</div></div></div>
+      <div class="card-desc">Real-time recommendations across 5 pillars: Cost Optimization, Performance, Security, Fault Tolerance, Service Limits.</div>
+      <div class="tags"><span class="tag">Free: 7 checks</span><span class="tag hot">Business+: All checks</span></div>
+      <div class="example"><strong>Exam:</strong> Recommendations to optimize cost/security/performance → Trusted Advisor</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🏦</div><div><div class="card-title">Consolidated Billing</div></div></div>
+      <div class="card-desc">One bill for all accounts in AWS Organization. Volume discounts aggregated. Share Reserved Instances across accounts.</div>
+      <div class="example"><strong>Exam:</strong> Single bill for multiple accounts → Consolidated Billing via Organizations</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🆓</div><div><div class="card-title">AWS Free Tier</div></div></div>
+      <div class="card-desc">
+        <strong>Always Free:</strong> Lambda 1M req/mo, DynamoDB 25GB<br>
+        <strong>12-Month Free:</strong> EC2 t2.micro, S3 5GB<br>
+        <strong>Trials:</strong> Time-limited service trials
+      </div>
+      <div class="example"><strong>Exam:</strong> Lambda 1M req/month free → Always Free tier</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">💸</div><div><div class="card-title">Savings Plans</div></div></div>
+      <div class="card-desc">Up to 66% off. Commit to $/hour usage for 1-3 years. Works for EC2, Lambda, Fargate. More flexible than Reserved Instances.</div>
+      <div class="example">
+        <strong>Compute Savings Plan:</strong> Most flexible, any region/family<br>
+        <strong>EC2 Savings Plan:</strong> Specific family, ~72% off
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🏷️</div><div><div class="card-title">Cost Allocation Tags</div></div></div>
+      <div class="card-desc">Tag resources (Project=X, Dept=Eng) to track costs by team/project. Must activate in billing console first!</div>
+      <div class="example"><strong>Exam:</strong> Track costs per project/department → Cost Allocation Tags</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MIGRATION ─── -->
+<div class="section" id="tab-migration">
+  <p class="section-title">🚀 Migration, Support & Other Key Services</p>
+  <div class="grid">
+    <div class="card card-wide">
+      <div class="card-header"><div class="icon">🏆</div><div><div class="card-title">Support Plans</div></div></div>
+      <div class="support-row">
+        <div class="support-card sup-basic">
+          <h4>Basic</h4>
+          <div class="price">Free</div>
+          <ul><li>Documentation</li><li>Trusted Advisor (7)</li><li>No tech support</li></ul>
+        </div>
+        <div class="support-card sup-dev">
+          <h4>Developer</h4>
+          <div class="price">From $29/mo</div>
+          <ul><li>Business hours email</li><li>1 primary contact</li><li>General guidance</li></ul>
+        </div>
+        <div class="support-card sup-biz">
+          <h4>Business</h4>
+          <div class="price">From $100/mo</div>
+          <ul><li>24/7 phone/chat</li><li>All Trusted Advisor</li><li>1hr for urgent</li></ul>
+        </div>
+        <div class="support-card sup-ent">
+          <h4>Enterprise</h4>
+          <div class="price">From $15,000/mo</div>
+          <ul><li>TAM assigned</li><li>15min for critical</li><li>Concierge team</li></ul>
+        </div>
+      </div>
+      <div class="example" style="margin-top:12px"><strong>Exam:</strong> Need TAM (Technical Account Manager) → Enterprise Support!</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">📦</div><div><div class="card-title">Migration Strategies — 7 Rs</div></div></div>
+      <div class="table-wrap"><table>
+        <tr><th>Strategy</th><th>Description</th></tr>
+        <tr><td>Retire</td><td>Decommission — no longer needed</td></tr>
+        <tr><td>Retain</td><td>Keep on-premises for now</td></tr>
+        <tr><td>Rehost</td><td>Lift & shift to EC2 (no changes)</td></tr>
+        <tr><td>Relocate</td><td>Move to AWS without modification (VMware)</td></tr>
+        <tr><td>Repurchase</td><td>Move to SaaS (e.g., Salesforce)</td></tr>
+        <tr><td>Replatform</td><td>Lift & optimize (e.g., DB → RDS)</td></tr>
+        <tr><td>Refactor</td><td>Re-architect cloud-native (most effort!)</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">📊</div><div><div class="card-title">CloudWatch</div><div class="card-sub">Monitoring & Alerts</div></div></div>
+      <div class="card-desc">Collect metrics, logs, events from AWS services. Create dashboards, set alarms. Can trigger Auto Scaling.</div>
+      <div class="example">
+        <strong>Metrics:</strong> CPU, memory, network<br>
+        <strong>Logs:</strong> App logs, Lambda logs, VPC Flow logs<br>
+        <strong>Alarm:</strong> SNS notification when threshold breached
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🏗️</div><div><div class="card-title">CloudFormation</div><div class="card-sub">Infrastructure as Code</div></div></div>
+      <div class="card-desc">Define AWS infrastructure using JSON/YAML templates. Provision and update resources consistently. Stacks = group of resources.</div>
+      <div class="example"><strong>Exam:</strong> Provision infra using code, repeatably → CloudFormation (AWS-native IaC)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🔔</div><div><div class="card-title">SNS / SQS</div><div class="card-sub">Messaging</div></div></div>
+      <div class="card-desc">
+        <strong>SNS</strong> = Simple Notification Service. Pub/Sub model. Push messages to multiple subscribers (email, SMS, Lambda, SQS).<br>
+        <strong>SQS</strong> = Simple Queue Service. Message queue. Decouples microservices. Pull-based.
+      </div>
+      <div class="example"><strong>Exam:</strong> Decouple app components → SQS | Broadcast to many → SNS</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🤖</div><div><div class="card-title">AI/ML Services</div></div></div>
+      <div class="card-desc">
+        <strong>Rekognition:</strong> Image/video analysis<br>
+        <strong>Comprehend:</strong> NLP, sentiment analysis<br>
+        <strong>Translate:</strong> Language translation<br>
+        <strong>Polly:</strong> Text to speech<br>
+        <strong>Lex:</strong> Build chatbots (powers Alexa!)<br>
+        <strong>SageMaker:</strong> Build/train/deploy ML models
+      </div>
+      <div class="example"><strong>Exam:</strong> Chatbot → Lex | Analyze images → Rekognition</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── WELL-ARCHITECTED ─── -->
+<div class="section" id="tab-wellarch">
+  <p class="section-title">🏛 AWS Well-Architected Framework — 6 Pillars</p>
+  <div class="grid grid-3 mb">
+    <div class="card">
+      <div class="card-header"><div class="icon">⚙️</div><div><div class="card-title">Operational Excellence</div></div></div>
+      <div class="card-desc">Run and monitor systems to deliver business value. Continually improve processes and procedures.</div>
+      <div class="tags"><span class="tag">IaC</span><span class="tag">Small reversible changes</span><span class="tag">Runbooks</span></div>
+      <div class="example"><strong>Key:</strong> CloudFormation, CloudWatch, X-Ray, CodeDeploy</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🔐</div><div><div class="card-title">Security</div></div></div>
+      <div class="card-desc">Protect information, systems, and assets. Risk assessments and mitigation strategies.</div>
+      <div class="tags"><span class="tag">Least privilege</span><span class="tag">Enable traceability</span><span class="tag">Encrypt data</span></div>
+      <div class="example"><strong>Key:</strong> IAM, KMS, CloudTrail, Shield, WAF, GuardDuty</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">💪</div><div><div class="card-title">Reliability</div></div></div>
+      <div class="card-desc">Recover from failures. Dynamically acquire resources. Mitigate disruptions.</div>
+      <div class="tags"><span class="tag">Multi-AZ</span><span class="tag">Auto Scaling</span><span class="tag">Backup & DR</span></div>
+      <div class="example"><strong>Key:</strong> Route 53, ELB, Auto Scaling, RDS Multi-AZ, S3</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🚀</div><div><div class="card-title">Performance Efficiency</div></div></div>
+      <div class="card-desc">Use computing resources efficiently. Maintain efficiency as demand changes and tech evolves.</div>
+      <div class="tags"><span class="tag">Right-sizing</span><span class="tag">Serverless</span><span class="tag">Caching</span></div>
+      <div class="example"><strong>Key:</strong> Lambda, Auto Scaling, CloudFront, ElastiCache, Fargate</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">💰</div><div><div class="card-title">Cost Optimization</div></div></div>
+      <div class="card-desc">Avoid unnecessary costs. Use most cost-effective resources. Scale to meet business needs.</div>
+      <div class="tags"><span class="tag">Reserved/Spot</span><span class="tag">Savings Plans</span><span class="tag">S3 lifecycle</span></div>
+      <div class="example"><strong>Key:</strong> Cost Explorer, Trusted Advisor, Budgets, S3 Intelligent-Tiering</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="icon">🌿</div><div><div class="card-title">Sustainability</div></div></div>
+      <div class="card-desc">Minimize environmental impact of cloud workloads. Shared responsibility for carbon footprint.</div>
+      <div class="tags"><span class="tag">Right-size</span><span class="tag">Managed services</span><span class="tag">Serverless</span></div>
+      <div class="example"><strong>Tip:</strong> Serverless & managed services = less wasteful = sustainable ♻️</div>
+    </div>
+  </div>
+
+  <p class="section-title">🔭 Cloud Adoption Framework (CAF) — 6 Perspectives</p>
+  <div class="grid grid-3">
+    <div class="card"><div class="card-header"><div class="icon">💼</div><div><div class="card-title">Business</div></div></div><div class="card-desc">Ensure cloud investments accelerate digital transformation and business outcomes.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">👥</div><div><div class="card-title">People</div></div></div><div class="card-desc">Bridge tech and business. Focus on culture, structure, roles, and skills.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">📋</div><div><div class="card-title">Governance</div></div></div><div class="card-desc">Minimize transformation risks, maximize benefits through cloud enablement.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">🔧</div><div><div class="card-title">Platform</div></div></div><div class="card-desc">Build enterprise-grade, scalable hybrid cloud platform.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">🔐</div><div><div class="card-title">Security</div></div></div><div class="card-desc">Achieve confidentiality, integrity, and availability of data and workloads.</div></div>
+    <div class="card"><div class="card-header"><div class="icon">⚙️</div><div><div class="card-title">Operations</div></div></div><div class="card-desc">Deliver cloud services at agreed level to business stakeholders.</div></div>
+  </div>
+</div>
+
+<!-- NO RESULTS -->
+<div class="no-results" id="noResults" style="display:none">
+  🔍 Kuch nahi mila yaar! Try another search term...
+</div>
+
+</main>
+
+<script>
+  // TABS
+  const tabs = document.querySelectorAll('.tab');
+  const sections = document.querySelectorAll('.section');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      sections.forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      document.getElementById('searchBox').value = '';
+      document.getElementById('noResults').style.display = 'none';
+      document.querySelectorAll('.card').forEach(c => c.style.display = '');
+    });
+  });
+
+  // SEARCH
+  document.getElementById('searchBox').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    if (!q) {
+      tabs.forEach(t => t.classList.remove('active'));
+      sections.forEach(s => s.classList.remove('active'));
+      tabs[0].classList.add('active');
+      sections[0].classList.add('active');
+      document.getElementById('noResults').style.display = 'none';
+      return;
+    }
+    sections.forEach(s => s.classList.add('active'));
+    tabs.forEach(t => t.classList.remove('active'));
+    let found = 0;
+    document.querySelectorAll('.card').forEach(card => {
+      const text = card.innerText.toLowerCase();
+      if (text.includes(q)) { card.style.display = ''; found++; }
+      else { card.style.display = 'none'; }
+    });
+    document.getElementById('noResults').style.display = found === 0 ? 'block' : 'none';
+  });
+</script>
+</body>
+</html>
